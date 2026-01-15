@@ -355,7 +355,7 @@ export default function UsersAndAdminsPage() {
                     </CardContent>
                 </Card>
                 <EditUserModal
-                    user={selectedUser}
+                    userId={selectedUser?.id}
                     open={isEditModalOpen}
                     onOpenChange={setIsEditModalOpen}
                     onSuccess={loadUsers}

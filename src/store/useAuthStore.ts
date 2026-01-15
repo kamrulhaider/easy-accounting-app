@@ -143,6 +143,7 @@ interface User {
     company?: {
         id?: string;
         name: string;
+        email?: string;
     } | null;
     createdAt: string;
     updatedAt: string;
