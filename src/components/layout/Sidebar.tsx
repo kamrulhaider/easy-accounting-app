@@ -9,6 +9,7 @@ import {
     BookOpen,
     Library,
     Scale,
+    Activity,
     LogOut,
     X
 } from "lucide-react";
@@ -31,6 +32,7 @@ const navItems = [
     { name: "Journal", icon: BookOpen, path: "/journal", roles: ["COMPANY_ADMIN", "COMPANY_USER"] },
     { name: "Ledger", icon: Library, path: "/ledger", roles: ["COMPANY_ADMIN", "COMPANY_USER"] },
     { name: "Trial Balance", icon: Scale, path: "/trial-balance", roles: ["COMPANY_ADMIN", "COMPANY_USER"] },
+    { name: "Audit Logs", icon: Activity, path: "/audit-logs", roles: ["SUPER_ADMIN", "COMPANY_ADMIN"] },
 ];
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {

@@ -149,6 +149,28 @@ interface User {
     updatedAt: string;
 }
 
+export interface AuditLog {
+    id: string;
+    action: string;
+    entity: string;
+    entityId: string;
+    timestamp: string;
+    companyId: string;
+    userId: string;
+    company?: {
+        id: string;
+        name: string;
+        email: string;
+    };
+    user?: {
+        id: string;
+        username: string;
+        email: string;
+        name: string;
+        userRole: string;
+    };
+}
+
 interface AuthResponse {
     token: string;
     user: User;
@@ -205,6 +227,11 @@ interface AuthState {
     deleteJournalEntry: (id: string) => Promise<void>;
     getLedger: (params: { accountId: string; startDate?: string; endDate?: string; limit?: number; offset?: number; all?: boolean }) => Promise<LedgerResponse>;
     getTrialBalance: (params: { startDate?: string; endDate?: string; status?: string }) => Promise<TrialBalanceResponse>;
+
+    // Audit Logs
+    auditLogs: AuditLog[];
+    totalAuditLogs: number;
+    fetchAuditLogs: (params?: any) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -223,7 +250,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     uncategorizedCount: 0,
     journalEntries: [],
     totalJournalEntries: 0,
+
     journalTotals: { debit: 0, credit: 0 },
+
+    auditLogs: [],
+    totalAuditLogs: 0,
 
     login: async (usernameOrEmail: string, password: string) => {
         try {
@@ -927,6 +958,28 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
 
         return data as TrialBalanceResponse;
+    },
+
+    fetchAuditLogs: async (params = {}) => {
+        const { token } = get();
+        if (!token) return;
+
+        const query = new URLSearchParams(params).toString();
+        const response = await fetch(`${API_BASE_URL}/audit-logs?${query}`, {
+            headers: {
+                "Authorization": `Bearer ${token}`,
+            },
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || "Failed to fetch audit logs");
+        }
+
+        set({
+            auditLogs: data.auditLogs,
+            totalAuditLogs: data.total
+        });
     },
 
 

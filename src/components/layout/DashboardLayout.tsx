@@ -11,7 +11,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     return (
-        <div className="flex min-h-screen bg-gray-50/50">
+        <div className="flex h-screen overflow-hidden bg-gray-50/50">
             {/* Sidebar component handles its own hidden/visible state for mobile */}
             <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 

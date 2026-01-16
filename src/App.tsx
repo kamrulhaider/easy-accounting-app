@@ -12,6 +12,7 @@ import Categories from "@/pages/Categories";
 import Journal from "@/pages/Journal";
 import Ledger from "@/pages/Ledger";
 import TrialBalance from "@/pages/TrialBalance";
+import AuditLogs from "@/pages/AuditLogs";
 import "./App.css";
 
 function ProtectedRoute() {
@@ -50,6 +51,7 @@ export default function App() {
           <Route path="/journal" element={<Journal />} />
           <Route path="/ledger" element={<Ledger />} />
           <Route path="/trial-balance" element={<TrialBalance />} />
+          <Route path="/audit-logs" element={<AuditLogs />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
