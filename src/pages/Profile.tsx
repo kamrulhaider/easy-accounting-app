@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { User, Building2, Phone, MapPin, Mail, Shield } from "lucide-react";
 import { ChangePasswordModal } from "@/components/layout/ChangePasswordModal";
+import { EditProfileModal } from "@/components/layout/EditProfileModal";
 
 export default function ProfilePage() {
     const { user, fetchProfile } = useAuthStore();
@@ -33,6 +34,9 @@ export default function ProfilePage() {
                                 <User className="h-5 w-5 text-primary" />
                             </div>
                             <CardTitle>Personal Information</CardTitle>
+                            <div className="ml-auto">
+                                <EditProfileModal />
+                            </div>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="grid gap-1">

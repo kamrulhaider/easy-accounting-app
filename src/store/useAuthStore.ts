@@ -169,6 +169,48 @@ export interface AuditLog {
         name: string;
         userRole: string;
     };
+
+}
+
+export interface CompanySummaryResponse {
+    companyId: string;
+    period: {
+        startDate: string;
+        endDate: string;
+    };
+    summary: {
+        totalRevenue: number;
+        totalExpense: number;
+        netProfit: number;
+        journalEntryCount: number;
+        activeAccountCount: number;
+    };
+}
+
+export interface ProfitLossData {
+    companyId: string;
+    period: {
+        startMonth: string;
+        endMonth: string;
+    };
+    data: {
+        month: string;
+        revenue: number;
+        expense: number;
+        net: number;
+    }[];
+}
+
+export interface JournalEntryCountData {
+    companyId: string;
+    period: {
+        startMonth: string;
+        endMonth: string;
+    };
+    data: {
+        month: string;
+        count: number;
+    }[];
 }
 
 interface AuthResponse {
@@ -198,6 +240,7 @@ interface AuthState {
     initialize: () => Promise<void>;
     fetchProfile: () => Promise<void>;
     changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+    updateProfile: (data: { name?: string; phone?: string; address?: string }) => Promise<void>;
     fetchCompanies: (params?: any) => Promise<void>;
     getCompany: (id: string) => Promise<Company>;
     createCompany: (data: any) => Promise<void>;
@@ -232,6 +275,11 @@ interface AuthState {
     auditLogs: AuditLog[];
     totalAuditLogs: number;
     fetchAuditLogs: (params?: any) => Promise<void>;
+
+    // Dashboard
+    getCompanySummary: (params?: { companyId?: string; startDate?: string; endDate?: string }) => Promise<CompanySummaryResponse>;
+    getProfitLoss12Months: (params?: { companyId?: string }) => Promise<ProfitLossData>;
+    getJournalEntries12Months: (params?: { companyId?: string }) => Promise<JournalEntryCountData>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -359,10 +407,29 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             body: JSON.stringify({ currentPassword, newPassword }),
         });
 
-        const data = await response.json();
+        await response.json();
+    },
+
+    updateProfile: async (data: { name?: string; phone?: string; address?: string }) => {
+        const { token } = get();
+        if (!token) throw new Error("Unauthorized");
+
+        const response = await fetch(`${API_BASE_URL}/auth/me`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`,
+            },
+            body: JSON.stringify(data),
+        });
+
+        const result = await response.json();
         if (!response.ok) {
-            throw new Error(data.error || "Failed to change password");
+            throw new Error(result.error || "Failed to update profile");
         }
+
+        set({ user: result.user });
+        localStorage.setItem("authUser", JSON.stringify(result.user));
     },
 
     fetchCompanies: async (params = {}) => {
@@ -980,6 +1047,45 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             auditLogs: data.auditLogs,
             totalAuditLogs: data.total
         });
+    },
+
+    getCompanySummary: async (params = {}) => {
+        const { token } = get();
+        if (!token) throw new Error("Unauthorized");
+
+        const query = new URLSearchParams(params as any).toString();
+        const response = await fetch(`${API_BASE_URL}/dashboard/company/summary?${query}`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Failed to fetch company summary");
+        return data as CompanySummaryResponse;
+    },
+
+    getProfitLoss12Months: async (params = {}) => {
+        const { token } = get();
+        if (!token) throw new Error("Unauthorized");
+
+        const query = new URLSearchParams(params as any).toString();
+        const response = await fetch(`${API_BASE_URL}/dashboard/company/profit-loss-12-months?${query}`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Failed to fetch profit/loss data");
+        return data as ProfitLossData;
+    },
+
+    getJournalEntries12Months: async (params = {}) => {
+        const { token } = get();
+        if (!token) throw new Error("Unauthorized");
+
+        const query = new URLSearchParams(params as any).toString();
+        const response = await fetch(`${API_BASE_URL}/dashboard/company/journal-entries-12-months?${query}`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Failed to fetch journal entries data");
+        return data as JournalEntryCountData;
     },
 
 
