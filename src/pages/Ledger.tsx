@@ -7,12 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
     Book,
-    Download,
     Loader2,
     Landmark,
-    FilterX
+    FilterX,
+    FileText,
+    FileSpreadsheet
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
 
 export default function LedgerPage() {
     const { user, accounts, fetchAccounts, getLedger } = useAuthStore();
@@ -30,6 +34,7 @@ export default function LedgerPage() {
     const limit = 50;
 
     const [isLoading, setIsLoading] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
     const [ledgerData, setLedgerData] = useState<LedgerResponse | null>(null);
     const [error, setError] = useState<string | null>(null);
 
@@ -77,6 +82,149 @@ export default function LedgerPage() {
         }).format(amount);
     };
 
+    const fetchFullLedger = async () => {
+        if (!selectedAccountId) return null;
+        return await getLedger({
+            accountId: selectedAccountId,
+            startDate: startDate || undefined,
+            endDate: endDate || undefined,
+            all: true
+        });
+    };
+
+    const handleExportPDF = async () => {
+        if (!selectedAccountId || !ledgerData) return;
+        setIsExporting(true);
+        try {
+            const data = await fetchFullLedger();
+            if (!data) return;
+
+            const doc = new jsPDF();
+            const accountName = data.account.name;
+
+            // Title
+            doc.setFontSize(18);
+            doc.text(`Ledger - ${accountName}`, 14, 22);
+
+            doc.setFontSize(11);
+            doc.text(`Period: ${startDate} to ${endDate}`, 14, 30);
+            doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 36);
+
+            // Table
+            const tableColumn = ["Date", "Ref", "Description", "Debit", "Credit", "Balance"];
+            const tableRows: any[] = [];
+
+            data.lines.forEach(line => {
+                const row = [
+                    new Date(line.date).toLocaleDateString(),
+                    `JE-${line.journalEntryId.substring(0, 8)}`,
+                    line.description || line.journalEntryDescription,
+                    line.debitAmount > 0 ? formatCurrency(line.debitAmount) : "-",
+                    line.creditAmount > 0 ? formatCurrency(line.creditAmount) : "-",
+                    formatCurrency(line.balance)
+                ];
+                tableRows.push(row);
+            });
+
+            // Totals row
+            tableRows.push([
+                "",
+                "",
+                "TOTALS",
+                formatCurrency(data.totals.debit),
+                formatCurrency(data.totals.credit),
+                formatCurrency(data.totals.net)
+            ]);
+
+            autoTable(doc, {
+                head: [tableColumn],
+                body: tableRows,
+                startY: 44,
+                theme: 'striped',
+                headStyles: { fillColor: [66, 66, 66] }
+            });
+
+            doc.save(`Ledger_${accountName}_${startDate}_${endDate}.pdf`);
+
+        } catch (error) {
+            console.error("Export PDF error:", error);
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
+    const handleExportExcel = async () => {
+        if (!selectedAccountId || !ledgerData) return;
+        setIsExporting(true);
+        try {
+            const data = await fetchFullLedger();
+            if (!data) return;
+
+            const accountName = data.account.name;
+
+            // Prepare header info
+            const titleRows = [
+                [`Account: ${accountName}`],
+                [`Period: ${startDate} to ${endDate}`],
+                [`Generated: ${new Date().toLocaleDateString()}`],
+                [] // Spacer
+            ];
+
+            // Prepare headers
+            const headers = ["Date", "Ref", "Description", "Debit", "Credit", "Balance"];
+
+            // Prepare data rows
+            const dataRows = data.lines.map(line => [
+                new Date(line.date).toLocaleDateString(),
+                `JE-${line.journalEntryId.substring(0, 8)}`,
+                line.description || line.journalEntryDescription,
+                line.debitAmount,
+                line.creditAmount,
+                line.balance
+            ]);
+
+            // Prepare total row
+            const totalRow = [
+                '',
+                '',
+                'TOTALS',
+                data.totals.debit,
+                data.totals.credit,
+                data.totals.net
+            ];
+
+            // Combine all
+            const worksheetData = [
+                ...titleRows,
+                headers,
+                ...dataRows,
+                totalRow
+            ];
+
+            const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Ledger");
+
+            // Adjust column widths
+            const wscols = [
+                { wch: 12 }, // Date
+                { wch: 15 }, // Ref
+                { wch: 40 }, // Description
+                { wch: 12 }, // Debit
+                { wch: 12 }, // Credit
+                { wch: 12 }, // Balance
+            ];
+            worksheet['!cols'] = wscols;
+
+            XLSX.writeFile(workbook, `Ledger_${accountName}_${startDate}_${endDate}.xlsx`);
+
+        } catch (error) {
+            console.error("Export Excel error", error);
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
     return (
         <DashboardLayout>
             <div className="space-y-6">
@@ -88,10 +236,27 @@ export default function LedgerPage() {
                         </p>
                     </div>
                     <div className="ml-4 md:ml-0 flex gap-2">
-                        <Button variant="outline" className="gap-2" onClick={() => window.print()}>
-                            <Download className="h-4 w-4" />
-                            Export
-                        </Button>
+                        <div className="flex items-center gap-2">
+
+                            <Button
+                                variant="default"
+                                className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+                                onClick={handleExportExcel}
+                                disabled={!selectedAccountId || !ledgerData || isLoading || isExporting}
+                            >
+                                {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileSpreadsheet className="h-4 w-4" />}
+                                <span className="hidden sm:inline">Excel</span>
+                            </Button>
+                            <Button
+                                variant="default"
+                                className="gap-2 bg-rose-600 hover:bg-rose-700 text-white"
+                                onClick={handleExportPDF}
+                                disabled={!selectedAccountId || !ledgerData || isLoading || isExporting}
+                            >
+                                {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+                                <span className="hidden sm:inline">PDF</span>
+                            </Button>
+                        </div>
                     </div>
                 </div>
 

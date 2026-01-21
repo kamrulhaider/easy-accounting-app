@@ -7,10 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
     Scale,
-    Download,
     Loader2,
     FilterX,
+    FileText,
+    FileSpreadsheet
 } from "lucide-react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
 
 
 export default function TrialBalancePage() {
@@ -26,6 +30,7 @@ export default function TrialBalancePage() {
     const [statusFilter, setStatusFilter] = useState<string>("ACTIVE");
 
     const [isLoading, setIsLoading] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
     const [tbData, setTbData] = useState<TrialBalanceResponse | null>(null);
     const [error, setError] = useState<string | null>(null);
 
@@ -64,6 +69,123 @@ export default function TrialBalancePage() {
         }).format(amount);
     };
 
+    const handleExportPDF = () => {
+        if (!tbData) return;
+        setIsExporting(true);
+        try {
+            const doc = new jsPDF();
+            const companyName = user?.company?.name || "Company";
+
+            // Title
+            doc.setFontSize(18);
+            doc.text(`Trial Balance - ${companyName}`, 14, 22);
+
+            doc.setFontSize(11);
+            doc.text(`Period: ${startDate} to ${endDate}`, 14, 30);
+            doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 36);
+
+            // Table
+            const tableColumn = ["Account", "Type", "Debit Balance", "Credit Balance"];
+            const tableRows: any[] = [];
+
+            tbData.accounts.forEach(acc => {
+                const row = [
+                    acc.name,
+                    acc.accountType,
+                    acc.debitBalance > 0 ? formatCurrency(acc.debitBalance) : "-",
+                    acc.creditBalance > 0 ? formatCurrency(acc.creditBalance) : "-"
+                ];
+                tableRows.push(row);
+            });
+
+            // Totals row
+            tableRows.push([
+                "TOTALS",
+                "",
+                formatCurrency(tbData.totals.debitBalance),
+                formatCurrency(tbData.totals.creditBalance)
+            ]);
+
+            autoTable(doc, {
+                head: [tableColumn],
+                body: tableRows,
+                startY: 44,
+                theme: 'striped',
+                headStyles: { fillColor: [66, 66, 66] }
+            });
+
+            doc.save(`TrialBalance_${startDate}_${endDate}.pdf`);
+
+        } catch (error) {
+            console.error("Export PDF error:", error);
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
+    const handleExportExcel = () => {
+        if (!tbData) return;
+        setIsExporting(true);
+        try {
+            const companyName = user?.company?.name || "Company";
+
+            // Prepare header info
+            const titleRows = [
+                [`Trial Balance: ${companyName}`],
+                [`Period: ${startDate} to ${endDate}`],
+                [`Generated: ${new Date().toLocaleDateString()}`],
+                [] // Spacer
+            ];
+
+            // Prepare headers
+            const headers = ["Account", "Type", "Debit Balance", "Credit Balance"];
+
+            // Prepare data rows
+            const dataRows = tbData.accounts.map(acc => [
+                acc.name,
+                acc.accountType,
+                acc.debitBalance,
+                acc.creditBalance
+            ]);
+
+            // Prepare total row
+            const totalRow = [
+                'TOTALS',
+                '',
+                tbData.totals.debitBalance,
+                tbData.totals.creditBalance
+            ];
+
+            // Combine all
+            const worksheetData = [
+                ...titleRows,
+                headers,
+                ...dataRows,
+                totalRow
+            ];
+
+            const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Trial Balance");
+
+            // Adjust column widths
+            const wscols = [
+                { wch: 30 }, // Account
+                { wch: 15 }, // Type
+                { wch: 15 }, // Debit
+                { wch: 15 }, // Credit
+            ];
+            worksheet['!cols'] = wscols;
+
+            XLSX.writeFile(workbook, `TrialBalance_${startDate}_${endDate}.xlsx`);
+
+        } catch (error) {
+            console.error("Export Excel error", error);
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
     return (
         <DashboardLayout>
             <div className="space-y-6">
@@ -75,10 +197,26 @@ export default function TrialBalancePage() {
                         </p>
                     </div>
                     <div className="ml-4 md:ml-0 flex gap-2">
-                        <Button variant="outline" className="gap-2" onClick={() => window.print()}>
-                            <Download className="h-4 w-4" />
-                            Export PDF
-                        </Button>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="default"
+                                className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+                                onClick={handleExportExcel}
+                                disabled={!tbData || isLoading || isExporting}
+                            >
+                                {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileSpreadsheet className="h-4 w-4" />}
+                                <span className="hidden sm:inline">Excel</span>
+                            </Button>
+                            <Button
+                                variant="default"
+                                className="gap-2 bg-rose-600 hover:bg-rose-700 text-white"
+                                onClick={handleExportPDF}
+                                disabled={!tbData || isLoading || isExporting}
+                            >
+                                {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+                                <span className="hidden sm:inline">PDF</span>
+                            </Button>
+                        </div>
                     </div>
                 </div>
 
