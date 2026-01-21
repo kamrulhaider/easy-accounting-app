@@ -22,7 +22,7 @@ const ACCOUNT_TYPES = [
     { value: "ASSET", label: "Asset" },
     { value: "LIABILITY", label: "Liability" },
     { value: "EQUITY", label: "Equity" },
-    { value: "INCOME", label: "Income" },
+    { value: "REVENUE", label: "Revenue" },
     { value: "EXPENSE", label: "Expense" },
 ];
 
