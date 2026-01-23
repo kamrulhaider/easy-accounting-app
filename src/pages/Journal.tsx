@@ -21,6 +21,7 @@ import {
 import { cn } from "@/lib/utils";
 import { CreateJournalModal } from "@/components/layout/CreateJournalModal";
 import { EditJournalModal } from "@/components/layout/EditJournalModal";
+import { ConfirmationModal } from "@/components/layout/ConfirmationModal";
 
 export default function JournalPage() {
     const { user, journalEntries, totalJournalEntries, fetchJournalEntries, journalTotals } = useAuthStore();
@@ -37,6 +38,11 @@ export default function JournalPage() {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
     const [expandedEntries, setExpandedEntries] = useState<Set<string>>(new Set());
+
+    // Confirmation Modal State
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [entryToDelete, setEntryToDelete] = useState<string | null>(null);
+
     const { deleteJournalEntry, getJournalEntry } = useAuthStore();
 
     const loadJournalEntries = async () => {
@@ -91,19 +97,23 @@ export default function JournalPage() {
         }
     };
 
-    const handleDelete = async (id: string) => {
+    const handleDeleteClick = (id: string) => {
         if (user?.userRole !== "COMPANY_ADMIN") {
             alert("Only company admins can delete journal entries.");
             return;
         }
+        setEntryToDelete(id);
+        setIsDeleteModalOpen(true);
+    };
 
-        if (!window.confirm("Are you sure you want to delete this journal entry? This will soft-delete the entry.")) {
-            return;
-        }
+    const confirmDelete = async () => {
+        if (!entryToDelete) return;
 
         try {
-            await deleteJournalEntry(id);
+            await deleteJournalEntry(entryToDelete);
             loadJournalEntries();
+            setIsDeleteModalOpen(false);
+            setEntryToDelete(null);
         } catch (error: any) {
             alert(error.message || "Failed to delete entry");
         }
@@ -292,7 +302,7 @@ export default function JournalPage() {
                                                                         variant="ghost"
                                                                         size="icon"
                                                                         className="h-8 w-8 text-muted-foreground hover:text-rose-600"
-                                                                        onClick={() => handleDelete(entry.id)}
+                                                                        onClick={() => handleDeleteClick(entry.id)}
                                                                     >
                                                                         <Trash2 className="h-4 w-4" />
                                                                     </Button>
@@ -401,6 +411,17 @@ export default function JournalPage() {
                     open={isEditModalOpen}
                     onOpenChange={setIsEditModalOpen}
                     onSuccess={loadJournalEntries}
+                />
+
+                <ConfirmationModal
+                    open={isDeleteModalOpen}
+                    onOpenChange={setIsDeleteModalOpen}
+                    title="Delete Journal Entry"
+                    description="Are you sure you want to delete this journal entry? This will soft-delete the entry."
+                    onConfirm={confirmDelete}
+                    confirmText="Delete Entry"
+                    cancelText="Cancel"
+                    variant="destructive"
                 />
             </div>
         </DashboardLayout>

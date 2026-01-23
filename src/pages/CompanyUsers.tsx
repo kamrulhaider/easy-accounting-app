@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { CreateUserModal } from "@/components/layout/CreateUserModal";
 import { EditUserModal } from "@/components/layout/EditUserModal";
+import { ConfirmationModal } from "@/components/layout/ConfirmationModal";
 import {
     Pencil,
     Trash2,
@@ -28,6 +29,10 @@ export default function CompanyUsersPage() {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+
+    // Confirmation Modal State
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [userToDelete, setUserToDelete] = useState<{ id: string; name: string } | null>(null);
 
     // Filters and Pagination
     const [searchTerm, setSearchTerm] = useState("");
@@ -56,12 +61,19 @@ export default function CompanyUsersPage() {
         }
     };
 
-    const handleDelete = async (userId: string, name: string) => {
-        if (!window.confirm(`Are you sure you want to delete ${name}? This action cannot be undone.`)) return;
+    const handleDeleteClick = (userId: string, name: string) => {
+        setUserToDelete({ id: userId, name });
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!userToDelete) return;
 
         try {
-            await deleteCompanyUser(userId);
+            await deleteCompanyUser(userToDelete.id);
             loadUsers();
+            setIsDeleteModalOpen(false);
+            setUserToDelete(null);
         } catch (error: any) {
             alert(error.message || "Failed to delete user");
         }
@@ -247,7 +259,7 @@ export default function CompanyUsersPage() {
                                                                 variant="ghost"
                                                                 size="icon"
                                                                 className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                                                onClick={() => handleDelete(u.id, u.name)}
+                                                                onClick={() => handleDeleteClick(u.id, u.name)}
                                                                 disabled={u.id === user?.id}
                                                             >
                                                                 <Trash2 className="h-4 w-4" />
@@ -307,6 +319,17 @@ export default function CompanyUsersPage() {
                 onOpenChange={setIsEditModalOpen}
                 onSuccess={loadUsers}
                 userId={selectedUserId}
+            />
+
+            <ConfirmationModal
+                open={isDeleteModalOpen}
+                onOpenChange={setIsDeleteModalOpen}
+                title={`Delete ${userToDelete?.name}?`}
+                description={`Are you sure you want to delete ${userToDelete?.name}? This action cannot be undone and they will lose access immediately.`}
+                onConfirm={confirmDelete}
+                confirmText="Delete User"
+                cancelText="Cancel"
+                variant="destructive"
             />
         </DashboardLayout>
     );

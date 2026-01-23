@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { CreateCategoryModal } from "@/components/layout/CreateCategoryModal";
 import { EditCategoryModal } from "@/components/layout/EditCategoryModal";
 import { MoveAccountsModal } from "@/components/layout/MoveAccountsModal";
+import { ConfirmationModal } from "@/components/layout/ConfirmationModal";
 
 export default function CategoriesPage() {
     const { user, categories, totalCategories, fetchCategories, uncategorizedCount } = useAuthStore();
@@ -35,6 +36,11 @@ export default function CategoriesPage() {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState<any>(null);
+
+    // Confirmation Modal State
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [categoryToDelete, setCategoryToDelete] = useState<{ id: string; name: string } | null>(null);
+
     const { deleteCategory } = useAuthStore();
 
     const loadCategories = async () => {
@@ -62,14 +68,19 @@ export default function CategoriesPage() {
         return () => clearTimeout(timer);
     }, [searchTerm, page]);
 
-    const handleDelete = async (id: string, name: string) => {
-        if (!window.confirm(`Are you sure you want to delete the category "${name}"? Accounts in this category will become uncategorized.`)) {
-            return;
-        }
+    const handleDeleteClick = (id: string, name: string) => {
+        setCategoryToDelete({ id, name });
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!categoryToDelete) return;
 
         try {
-            await deleteCategory(id);
+            await deleteCategory(categoryToDelete.id);
             loadCategories();
+            setIsDeleteModalOpen(false);
+            setCategoryToDelete(null);
         } catch (error: any) {
             alert(error.message || "Failed to delete category");
         }
@@ -238,7 +249,7 @@ export default function CategoriesPage() {
                                                                         variant="ghost"
                                                                         size="icon"
                                                                         className="h-8 w-8 text-muted-foreground hover:text-rose-600"
-                                                                        onClick={() => handleDelete(cat.id, cat.name)}
+                                                                        onClick={() => handleDeleteClick(cat.id, cat.name)}
                                                                         title="Delete Category"
                                                                     >
                                                                         <Trash2 className="h-4 w-4" />
@@ -318,6 +329,17 @@ export default function CategoriesPage() {
                     open={isMoveModalOpen}
                     onOpenChange={setIsMoveModalOpen}
                     onSuccess={loadCategories}
+                />
+
+                <ConfirmationModal
+                    open={isDeleteModalOpen}
+                    onOpenChange={setIsDeleteModalOpen}
+                    title="Delete Category"
+                    description={`Are you sure you want to delete the category "${categoryToDelete?.name}"? Accounts in this category will become uncategorized.`}
+                    onConfirm={confirmDelete}
+                    confirmText="Delete Category"
+                    cancelText="Cancel"
+                    variant="destructive"
                 />
             </div>
         </DashboardLayout>

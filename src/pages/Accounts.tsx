@@ -19,6 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 import { CreateAccountModal } from "@/components/layout/CreateAccountModal";
 import { EditAccountModal } from "@/components/layout/EditAccountModal";
+import { ConfirmationModal } from "@/components/layout/ConfirmationModal";
 
 export default function AccountsPage() {
     const { user, accounts, totalAccounts, fetchAccounts } = useAuthStore();
@@ -34,6 +35,11 @@ export default function AccountsPage() {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedAccount, setSelectedAccount] = useState<any>(null);
+
+    // Confirmation Modal State
+    const [isDeactivateModalOpen, setIsDeactivateModalOpen] = useState(false);
+    const [accountToDeactivate, setAccountToDeactivate] = useState<{ id: string; name: string } | null>(null);
+
     const { deactivateAccount } = useAuthStore();
 
     const loadAccounts = async () => {
@@ -63,14 +69,19 @@ export default function AccountsPage() {
         return () => clearTimeout(timer);
     }, [searchTerm, typeFilter, statusFilter, page]);
 
-    const handleDeactivate = async (id: string, name: string) => {
-        if (!window.confirm(`Are you sure you want to deactivate the account "${name}"?`)) {
-            return;
-        }
+    const handleDeactivateClick = (id: string, name: string) => {
+        setAccountToDeactivate({ id, name });
+        setIsDeactivateModalOpen(true);
+    };
+
+    const confirmDeactivate = async () => {
+        if (!accountToDeactivate) return;
 
         try {
-            await deactivateAccount(id);
+            await deactivateAccount(accountToDeactivate.id);
             loadAccounts();
+            setIsDeactivateModalOpen(false);
+            setAccountToDeactivate(null);
         } catch (error: any) {
             alert(error.message || "Failed to deactivate account");
         }
@@ -270,7 +281,7 @@ export default function AccountsPage() {
                                                                     variant="ghost"
                                                                     size="icon"
                                                                     className="h-8 w-8 text-muted-foreground hover:text-rose-600"
-                                                                    onClick={() => handleDeactivate(acc.id, acc.name)}
+                                                                    onClick={() => handleDeactivateClick(acc.id, acc.name)}
                                                                     title="Deactivate Account"
                                                                 >
                                                                     <Power className="h-4 w-4" />
@@ -329,6 +340,17 @@ export default function AccountsPage() {
                     open={isEditModalOpen}
                     onOpenChange={setIsEditModalOpen}
                     onSuccess={loadAccounts}
+                />
+
+                <ConfirmationModal
+                    open={isDeactivateModalOpen}
+                    onOpenChange={setIsDeactivateModalOpen}
+                    title="Deactivate Account"
+                    description={`Are you sure you want to deactivate the account "${accountToDeactivate?.name}"? You can reactivate it later.`}
+                    onConfirm={confirmDeactivate}
+                    confirmText="Deactivate"
+                    cancelText="Cancel"
+                    variant="destructive"
                 />
             </div>
         </DashboardLayout>
