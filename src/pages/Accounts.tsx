@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
+import { toast } from "sonner";
 import { useAuthStore } from "@/store/useAuthStore";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
@@ -81,9 +82,10 @@ export default function AccountsPage() {
             await deactivateAccount(accountToDeactivate.id);
             loadAccounts();
             setIsDeactivateModalOpen(false);
+            toast.success("Account deactivated successfully");
             setAccountToDeactivate(null);
         } catch (error: any) {
-            alert(error.message || "Failed to deactivate account");
+            toast.error(error.message || "Failed to deactivate account");
         }
     };
 

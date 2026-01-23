@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
+import { toast } from "sonner";
 import { useAuthStore } from "@/store/useAuthStore";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
@@ -80,9 +81,10 @@ export default function CategoriesPage() {
             await deleteCategory(categoryToDelete.id);
             loadCategories();
             setIsDeleteModalOpen(false);
+            toast.success("Category deleted successfully");
             setCategoryToDelete(null);
         } catch (error: any) {
-            alert(error.message || "Failed to delete category");
+            toast.error(error.message || "Failed to delete category");
         }
     };
 

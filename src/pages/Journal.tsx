@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
+import { toast } from "sonner";
 import { useAuthStore } from "@/store/useAuthStore";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
@@ -99,7 +100,7 @@ export default function JournalPage() {
 
     const handleDeleteClick = (id: string) => {
         if (user?.userRole !== "COMPANY_ADMIN") {
-            alert("Only company admins can delete journal entries.");
+            toast.error("Only company admins can delete journal entries.");
             return;
         }
         setEntryToDelete(id);
@@ -113,9 +114,10 @@ export default function JournalPage() {
             await deleteJournalEntry(entryToDelete);
             loadJournalEntries();
             setIsDeleteModalOpen(false);
+            toast.success("Journal entry deleted successfully");
             setEntryToDelete(null);
         } catch (error: any) {
-            alert(error.message || "Failed to delete entry");
+            toast.error(error.message || "Failed to delete entry");
         }
     };
 
