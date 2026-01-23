@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { User, Building2, Phone, MapPin, Mail, Shield } from "lucide-react";
 import { ChangePasswordModal } from "@/components/layout/ChangePasswordModal";
 import { EditProfileModal } from "@/components/layout/EditProfileModal";
+import { EditMyCompanyModal } from "@/components/layout/EditMyCompanyModal";
 
 export default function ProfilePage() {
     const { user, fetchProfile } = useAuthStore();
@@ -110,6 +111,9 @@ export default function ProfilePage() {
                                         <Building2 className="h-5 w-5 text-purple-600" />
                                     </div>
                                     <CardTitle>Company Information</CardTitle>
+                                    <div className="ml-auto">
+                                        <EditMyCompanyModal />
+                                    </div>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     <div className="grid gap-1">
@@ -119,6 +123,30 @@ export default function ProfilePage() {
                                     <div className="grid gap-1">
                                         <Label className="text-xs text-muted-foreground">Company Email</Label>
                                         <p className="text-sm">{user.company.email}</p>
+                                    </div>
+                                    <div className="grid gap-1">
+                                        <Label className="text-xs text-muted-foreground">Description</Label>
+                                        <p className="text-sm text-muted-foreground italic">
+                                            {user.company.description || "No description provided"}
+                                        </p>
+                                    </div>
+                                    <div className="grid gap-1">
+                                        <Label className="text-xs text-muted-foreground">Address</Label>
+                                        <div className="flex items-center gap-2 text-sm">
+                                            <MapPin className="h-3 w-3 text-muted-foreground" />
+                                            <span>{user.company.address || "No address provided"}</span>
+                                        </div>
+                                    </div>
+                                    <div className="grid gap-1">
+                                        <Label className="text-xs text-muted-foreground">Phone</Label>
+                                        <div className="flex items-center gap-2 text-sm">
+                                            <Phone className="h-3 w-3 text-muted-foreground" />
+                                            <span>{user.company.phone || "No phone provided"}</span>
+                                        </div>
+                                    </div>
+                                    <div className="grid gap-1">
+                                        <Label className="text-xs text-muted-foreground">Currency</Label>
+                                        <p className="text-sm">{(user.company as any).currency || "Not set"}</p>
                                     </div>
                                 </CardContent>
                             </Card>

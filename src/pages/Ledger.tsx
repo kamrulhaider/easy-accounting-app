@@ -13,7 +13,7 @@ import {
     FileText,
     FileSpreadsheet
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
@@ -74,13 +74,7 @@ export default function LedgerPage() {
         return <Navigate to="/" replace />;
     }
 
-    const formatCurrency = (amount: number | null | undefined) => {
-        if (amount === null || amount === undefined) return "-";
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-        }).format(amount);
-    };
+
 
     const fetchFullLedger = async () => {
         if (!selectedAccountId) return null;
@@ -119,9 +113,9 @@ export default function LedgerPage() {
                     new Date(line.date).toLocaleDateString(),
                     `JE-${line.journalEntryId.substring(0, 8)}`,
                     line.description || line.journalEntryDescription,
-                    line.debitAmount > 0 ? formatCurrency(line.debitAmount) : "-",
-                    line.creditAmount > 0 ? formatCurrency(line.creditAmount) : "-",
-                    formatCurrency(line.balance)
+                    line.debitAmount > 0 ? formatCurrency(line.debitAmount, user?.company?.currency) : "-",
+                    line.creditAmount > 0 ? formatCurrency(line.creditAmount, user?.company?.currency) : "-",
+                    formatCurrency(line.balance, user?.company?.currency)
                 ];
                 tableRows.push(row);
             });
@@ -131,9 +125,9 @@ export default function LedgerPage() {
                 "",
                 "",
                 "TOTALS",
-                formatCurrency(data.totals.debit),
-                formatCurrency(data.totals.credit),
-                formatCurrency(data.totals.net)
+                formatCurrency(data.totals.debit, user?.company?.currency),
+                formatCurrency(data.totals.credit, user?.company?.currency),
+                formatCurrency(data.totals.net, user?.company?.currency)
             ]);
 
             autoTable(doc, {
@@ -350,11 +344,11 @@ export default function LedgerPage() {
                                 <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x border-b bg-primary/5">
                                     <div className="p-4 flex flex-col items-center justify-center text-center">
                                         <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">Total Debit</span>
-                                        <span className="text-xl font-bold text-gray-900">{formatCurrency(ledgerData.totals.debit)}</span>
+                                        <span className="text-xl font-bold text-gray-900">{formatCurrency(ledgerData.totals.debit, user?.company?.currency)}</span>
                                     </div>
                                     <div className="p-4 flex flex-col items-center justify-center text-center">
                                         <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">Total Credit</span>
-                                        <span className="text-xl font-bold text-gray-900">{formatCurrency(ledgerData.totals.credit)}</span>
+                                        <span className="text-xl font-bold text-gray-900">{formatCurrency(ledgerData.totals.credit, user?.company?.currency)}</span>
                                     </div>
                                     <div className="p-4 flex flex-col items-center justify-center text-center">
                                         <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">Net Balance</span>
@@ -362,7 +356,7 @@ export default function LedgerPage() {
                                             "text-xl font-bold",
                                             ledgerData.totals.net >= 0 ? "text-emerald-600" : "text-rose-600"
                                         )}>
-                                            {formatCurrency(ledgerData.totals.net)}
+                                            {formatCurrency(ledgerData.totals.net, user?.company?.currency)}
                                         </span>
                                     </div>
                                 </div>
@@ -404,16 +398,16 @@ export default function LedgerPage() {
                                                             {line.description || "-"}
                                                         </td>
                                                         <td className="px-6 py-4 text-right font-medium">
-                                                            {line.debitAmount > 0 ? formatCurrency(line.debitAmount) : "-"}
+                                                            {line.debitAmount > 0 ? formatCurrency(line.debitAmount, user?.company?.currency) : "-"}
                                                         </td>
                                                         <td className="px-6 py-4 text-right font-medium">
-                                                            {line.creditAmount > 0 ? formatCurrency(line.creditAmount) : "-"}
+                                                            {line.creditAmount > 0 ? formatCurrency(line.creditAmount, user?.company?.currency) : "-"}
                                                         </td>
                                                         <td className={cn(
                                                             "px-6 py-4 text-right font-bold",
                                                             line.balance >= 0 ? "text-gray-900" : "text-rose-600"
                                                         )}>
-                                                            {formatCurrency(line.balance)}
+                                                            {formatCurrency(line.balance, user?.company?.currency)}
                                                         </td>
                                                     </tr>
                                                 ))

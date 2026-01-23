@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
+import { formatCurrency } from "@/lib/utils";
 import { useAuthStore, type TrialBalanceResponse } from "@/store/useAuthStore";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
@@ -60,14 +61,7 @@ export default function TrialBalancePage() {
         return <Navigate to="/" replace />;
     }
 
-    const formatCurrency = (amount: number | null | undefined) => {
-        if (amount === null || amount === undefined) return "-";
-        if (amount === 0) return "-";
-        return new Intl.NumberFormat('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        }).format(amount);
-    };
+
 
     const handleExportPDF = () => {
         if (!tbData) return;
@@ -92,8 +86,8 @@ export default function TrialBalancePage() {
                 const row = [
                     acc.name,
                     acc.accountType,
-                    acc.debitBalance > 0 ? formatCurrency(acc.debitBalance) : "-",
-                    acc.creditBalance > 0 ? formatCurrency(acc.creditBalance) : "-"
+                    acc.debitBalance > 0 ? formatCurrency(acc.debitBalance, user?.company?.currency) : "-",
+                    acc.creditBalance > 0 ? formatCurrency(acc.creditBalance, user?.company?.currency) : "-"
                 ];
                 tableRows.push(row);
             });
@@ -102,8 +96,8 @@ export default function TrialBalancePage() {
             tableRows.push([
                 "TOTALS",
                 "",
-                formatCurrency(tbData.totals.debitBalance),
-                formatCurrency(tbData.totals.creditBalance)
+                formatCurrency(tbData.totals.debitBalance, user?.company?.currency),
+                formatCurrency(tbData.totals.creditBalance, user?.company?.currency)
             ]);
 
             autoTable(doc, {
@@ -291,11 +285,11 @@ export default function TrialBalancePage() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x border-b bg-primary/5">
                                     <div className="p-6 flex flex-col items-center justify-center text-center">
                                         <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">Total Debit Balance</span>
-                                        <span className="text-3xl font-black text-gray-900">${formatCurrency(tbData.totals.debitBalance)}</span>
+                                        <span className="text-3xl font-black text-gray-900">{formatCurrency(tbData.totals.debitBalance, user?.company?.currency)}</span>
                                     </div>
                                     <div className="p-6 flex flex-col items-center justify-center text-center">
                                         <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">Total Credit Balance</span>
-                                        <span className="text-3xl font-black text-gray-900">${formatCurrency(tbData.totals.creditBalance)}</span>
+                                        <span className="text-3xl font-black text-gray-900">{formatCurrency(tbData.totals.creditBalance, user?.company?.currency)}</span>
                                     </div>
                                 </div>
 
@@ -332,10 +326,10 @@ export default function TrialBalancePage() {
                                                                 </span>
                                                             </td>
                                                             <td className="px-6 py-4 text-right font-medium tabular-nums">
-                                                                {acc.debitBalance > 0 ? formatCurrency(acc.debitBalance) : "-"}
+                                                                {acc.debitBalance > 0 ? formatCurrency(acc.debitBalance, user?.company?.currency) : "-"}
                                                             </td>
                                                             <td className="px-6 py-4 text-right font-medium tabular-nums">
-                                                                {acc.creditBalance > 0 ? formatCurrency(acc.creditBalance) : "-"}
+                                                                {acc.creditBalance > 0 ? formatCurrency(acc.creditBalance, user?.company?.currency) : "-"}
                                                             </td>
                                                         </tr>
                                                     ))}
@@ -345,10 +339,10 @@ export default function TrialBalancePage() {
                                                             Grand Total
                                                         </td>
                                                         <td className="px-6 py-6 text-right text-base tabular-nums">
-                                                            ${formatCurrency(tbData.totals.debitBalance)}
+                                                            {formatCurrency(tbData.totals.debitBalance, user?.company?.currency)}
                                                         </td>
                                                         <td className="px-6 py-6 text-right text-base tabular-nums">
-                                                            ${formatCurrency(tbData.totals.creditBalance)}
+                                                            {formatCurrency(tbData.totals.creditBalance, user?.company?.currency)}
                                                         </td>
                                                     </tr>
                                                 </>
@@ -366,7 +360,7 @@ export default function TrialBalancePage() {
                                         <div>
                                             <h4 className="text-sm font-bold text-rose-800 uppercase tracking-tight">Unbalanced Warning</h4>
                                             <p className="text-xs text-rose-600 mt-1">
-                                                The trial balance is currently off by <b>${formatCurrency(Math.abs(tbData.totals.net))}</b>.
+                                                The trial balance is currently off by <b>{formatCurrency(Math.abs(tbData.totals.net), user?.company?.currency)}</b>.
                                                 Please review your journal entries for potential errors.
                                             </p>
                                         </div>

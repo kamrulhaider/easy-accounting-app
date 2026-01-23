@@ -144,6 +144,10 @@ interface User {
         id?: string;
         name: string;
         email?: string;
+        description?: string;
+        address?: string;
+        phone?: string;
+        currency?: string;
     } | null;
     createdAt: string;
     updatedAt: string;
@@ -245,6 +249,7 @@ interface AuthState {
     getCompany: (id: string) => Promise<Company>;
     createCompany: (data: any) => Promise<void>;
     updateCompany: (id: string, data: any) => Promise<void>;
+    updateMyCompany: (data: { description?: string; address?: string; phone?: string; currency?: string }) => Promise<void>;
     deleteCompany: (id: string) => Promise<void>;
     fetchUsers: (params?: any) => Promise<void>;
     fetchCompanyUsers: (params?: any) => Promise<void>;
@@ -508,6 +513,29 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         if (!response.ok) {
             throw new Error(result.error || "Failed to update company");
         }
+    },
+
+    updateMyCompany: async (data: any) => {
+        const { token } = get();
+        if (!token) throw new Error("Unauthorized");
+
+        const response = await fetch(`${API_BASE_URL}/companies/my`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`,
+            },
+            body: JSON.stringify(data),
+        });
+
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.error || "Failed to update company");
+        }
+
+        // Update local user state with new company details if necessary
+        // Since the user object contains a nested company object, we might want to refresh the profile
+        await get().fetchProfile();
     },
 
     deleteCompany: async (id: string) => {

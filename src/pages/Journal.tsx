@@ -19,7 +19,7 @@ import {
     Edit2,
     Trash2
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 import { CreateJournalModal } from "@/components/layout/CreateJournalModal";
 import { EditJournalModal } from "@/components/layout/EditJournalModal";
 import { ConfirmationModal } from "@/components/layout/ConfirmationModal";
@@ -149,7 +149,7 @@ export default function JournalPage() {
                                 <div>
                                     <p className="text-sm font-medium text-emerald-800/70 uppercase tracking-wider">Total Debits</p>
                                     <p className="text-2xl font-bold text-emerald-700">
-                                        {journalTotals.debit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                        {formatCurrency(journalTotals.debit, user?.company?.currency)}
                                     </p>
                                 </div>
                             </div>
@@ -164,7 +164,7 @@ export default function JournalPage() {
                                 <div>
                                     <p className="text-sm font-medium text-rose-800/70 uppercase tracking-wider">Total Credits</p>
                                     <p className="text-2xl font-bold text-rose-700">
-                                        {journalTotals.credit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                        {formatCurrency(journalTotals.credit, user?.company?.currency)}
                                     </p>
                                 </div>
                             </div>
@@ -281,10 +281,10 @@ export default function JournalPage() {
                                                             {entry.description || <span className="text-gray-400 italic font-normal text-xs">No description</span>}
                                                         </td>
                                                         <td className="px-6 py-4 text-right font-bold text-emerald-600">
-                                                            {entry.totals.debit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                            {formatCurrency(entry.totals.debit, user?.company?.currency)}
                                                         </td>
                                                         <td className="px-6 py-4 text-right font-bold text-rose-600">
-                                                            {entry.totals.credit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                            {formatCurrency(entry.totals.credit, user?.company?.currency)}
                                                         </td>
                                                         <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                                                             <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -344,10 +344,10 @@ export default function JournalPage() {
                                                                                         {line.description || "-"}
                                                                                     </td>
                                                                                     <td className="px-4 py-3 text-right font-semibold text-emerald-600">
-                                                                                        {line.debitAmount ? line.debitAmount.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "-"}
+                                                                                        {line.debitAmount ? formatCurrency(line.debitAmount, user?.company?.currency) : "-"}
                                                                                     </td>
                                                                                     <td className="px-4 py-3 text-right font-semibold text-rose-600">
-                                                                                        {line.creditAmount ? line.creditAmount.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "-"}
+                                                                                        {line.creditAmount ? formatCurrency(line.creditAmount, user?.company?.currency) : "-"}
                                                                                     </td>
                                                                                 </tr>
                                                                             ))}

@@ -15,7 +15,7 @@ import {
     AreaChart,
     Area
 } from "recharts";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 
 export default function Dashboard() {
     const { user, getCompanySummary, getProfitLoss12Months, getJournalEntries12Months } = useAuthStore();
@@ -50,7 +50,7 @@ export default function Dashboard() {
         }
     }, [user, getCompanySummary, getProfitLoss12Months, getJournalEntries12Months]);
 
-    const formatCurrency = (val: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
+
 
     if (isLoading) {
         return (
@@ -87,7 +87,7 @@ export default function Dashboard() {
                                 <DollarSign className="h-4 w-4 text-emerald-600" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-emerald-600">{formatCurrency(summary.summary.totalRevenue)}</div>
+                                <div className="text-2xl font-bold text-emerald-600">{formatCurrency(summary.summary.totalRevenue, user?.company?.currency)}</div>
                                 <p className="text-xs text-muted-foreground">In selected period</p>
                             </CardContent>
                         </Card>
@@ -97,7 +97,7 @@ export default function Dashboard() {
                                 <TrendingDown className="h-4 w-4 text-rose-600" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-rose-600">{formatCurrency(summary.summary.totalExpense)}</div>
+                                <div className="text-2xl font-bold text-rose-600">{formatCurrency(summary.summary.totalExpense, user?.company?.currency)}</div>
                                 <p className="text-xs text-muted-foreground">In selected period</p>
                             </CardContent>
                         </Card>
@@ -108,7 +108,7 @@ export default function Dashboard() {
                             </CardHeader>
                             <CardContent>
                                 <div className={cn("text-2xl font-bold", summary.summary.netProfit >= 0 ? "text-emerald-600" : "text-rose-600")}>
-                                    {formatCurrency(summary.summary.netProfit)}
+                                    {formatCurrency(summary.summary.netProfit, user?.company?.currency)}
                                 </div>
                                 <p className="text-xs text-muted-foreground">Net earnings</p>
                             </CardContent>
@@ -161,11 +161,11 @@ export default function Dashboard() {
                                             <YAxis
                                                 tickLine={false}
                                                 axisLine={false}
-                                                tickFormatter={(value) => `$${value / 1000}k`}
+                                                tickFormatter={(value) => formatCurrency(value, user?.company?.currency, { compact: true })}
                                                 tick={{ fontSize: 12 } as any}
                                             />
                                             <Tooltip
-                                                formatter={(value: any) => formatCurrency(value)}
+                                                formatter={(value: any) => formatCurrency(value, user?.company?.currency)}
                                                 contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
                                             />
                                             <Legend verticalAlign="top" height={36} />
