@@ -25,16 +25,14 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import {
-    Download,
     Search,
     FileText,
     FileSpreadsheet,
-    CalendarIcon
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+
 import { cn } from "@/lib/utils";
 
 export default function BalanceSheet() {

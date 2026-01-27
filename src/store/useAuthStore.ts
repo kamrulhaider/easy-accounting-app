@@ -1128,7 +1128,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     // Audit Logs
     fetchAuditLogs: async (params = {}) => {
-        const { token, user } = get();
+        const { token } = get();
         if (!token) return;
 
         const query = new URLSearchParams(params).toString();
