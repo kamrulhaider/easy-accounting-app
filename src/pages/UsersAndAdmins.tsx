@@ -299,20 +299,18 @@ export default function UsersAndAdminsPage() {
                                                         )}
                                                     </td>
                                                     <td className="px-6 py-4 text-right">
-                                                        {u.userRole === "COMPANY_ADMIN" && (
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-primary"
-                                                                onClick={() => {
-                                                                    setSelectedUser(u);
-                                                                    setIsEditModalOpen(true);
-                                                                }}
-                                                                title="Edit Administrator"
-                                                            >
-                                                                <Edit2 className="h-4 w-4" />
-                                                            </Button>
-                                                        )}
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-primary"
+                                                            onClick={() => {
+                                                                setSelectedUser(u);
+                                                                setIsEditModalOpen(true);
+                                                            }}
+                                                            title="Edit User"
+                                                        >
+                                                            <Edit2 className="h-4 w-4" />
+                                                        </Button>
                                                     </td>
                                                 </tr>
                                             ))}
@@ -355,7 +353,7 @@ export default function UsersAndAdminsPage() {
                     </CardContent>
                 </Card>
                 <EditUserModal
-                    userId={selectedUser?.id}
+                    user={selectedUser}
                     open={isEditModalOpen}
                     onOpenChange={setIsEditModalOpen}
                     onSuccess={loadUsers}

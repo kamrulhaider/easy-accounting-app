@@ -131,7 +131,7 @@ export interface TrialBalanceResponse {
     };
 }
 
-interface User {
+export interface User {
     id: string;
     username: string;
     email: string;
@@ -258,6 +258,7 @@ interface AuthState {
     updateCompanyUser: (id: string, data: any) => Promise<void>;
     deleteCompanyUser: (id: string) => Promise<void>;
     updateCompanyAdmin: (id: string, data: any) => Promise<void>;
+    resetCompanyAdminPassword: (id: string) => Promise<void>;
     fetchAccounts: (params?: any) => Promise<void>;
     createAccount: (data: any) => Promise<void>;
     getAccount: (id: string) => Promise<Account>;
@@ -688,6 +689,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const result = await response.json();
         if (!response.ok) {
             throw new Error(result.error || "Failed to update company administrator");
+        }
+    },
+
+    resetCompanyAdminPassword: async (id: string) => {
+        const { token } = get();
+        if (!token) throw new Error("Unauthorized");
+
+        const response = await fetch(`${API_BASE_URL}/users/admins/${id}/reset-password`, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+            },
+        });
+
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.error || "Failed to reset password");
         }
     },
 
