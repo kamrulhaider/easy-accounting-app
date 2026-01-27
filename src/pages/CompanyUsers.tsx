@@ -320,7 +320,7 @@ export default function CompanyUsersPage() {
                 open={isEditModalOpen}
                 onOpenChange={setIsEditModalOpen}
                 onSuccess={loadUsers}
-                userId={selectedUserId}
+                user={allUsers.find((u) => u.id === selectedUserId) || null}
             />
 
             <ConfirmationModal
