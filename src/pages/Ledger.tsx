@@ -13,7 +13,7 @@ import {
     FileText,
     FileSpreadsheet
 } from "lucide-react";
-import { cn, formatCurrency } from "@/lib/utils";
+import { cn, formatCurrency, formatCurrencyForExport } from "@/lib/utils";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
@@ -113,9 +113,9 @@ export default function LedgerPage() {
                     new Date(line.date).toLocaleDateString(),
                     `JE-${line.journalEntryId.substring(0, 8)}`,
                     line.description || line.journalEntryDescription,
-                    line.debitAmount > 0 ? formatCurrency(line.debitAmount, user?.company?.currency) : "-",
-                    line.creditAmount > 0 ? formatCurrency(line.creditAmount, user?.company?.currency) : "-",
-                    formatCurrency(line.balance, user?.company?.currency)
+                    line.debitAmount > 0 ? formatCurrencyForExport(line.debitAmount, user?.company?.currency) : "-",
+                    line.creditAmount > 0 ? formatCurrencyForExport(line.creditAmount, user?.company?.currency) : "-",
+                    formatCurrencyForExport(line.balance, user?.company?.currency)
                 ];
                 tableRows.push(row);
             });
@@ -125,9 +125,9 @@ export default function LedgerPage() {
                 "",
                 "",
                 "TOTALS",
-                formatCurrency(data.totals.debit, user?.company?.currency),
-                formatCurrency(data.totals.credit, user?.company?.currency),
-                formatCurrency(data.totals.net, user?.company?.currency)
+                formatCurrencyForExport(data.totals.debit, user?.company?.currency),
+                formatCurrencyForExport(data.totals.credit, user?.company?.currency),
+                formatCurrencyForExport(data.totals.net, user?.company?.currency)
             ]);
 
             autoTable(doc, {
@@ -172,9 +172,10 @@ export default function LedgerPage() {
                 new Date(line.date).toLocaleDateString(),
                 `JE-${line.journalEntryId.substring(0, 8)}`,
                 line.description || line.journalEntryDescription,
-                line.debitAmount,
-                line.creditAmount,
-                line.balance
+                line.description || line.journalEntryDescription,
+                line.debitAmount ? formatCurrencyForExport(line.debitAmount, user?.company?.currency) : "-",
+                line.creditAmount ? formatCurrencyForExport(line.creditAmount, user?.company?.currency) : "-",
+                formatCurrencyForExport(line.balance, user?.company?.currency)
             ]);
 
             // Prepare total row
@@ -182,9 +183,10 @@ export default function LedgerPage() {
                 '',
                 '',
                 'TOTALS',
-                data.totals.debit,
-                data.totals.credit,
-                data.totals.net
+                'TOTALS',
+                formatCurrencyForExport(data.totals.debit, user?.company?.currency),
+                formatCurrencyForExport(data.totals.credit, user?.company?.currency),
+                formatCurrencyForExport(data.totals.net, user?.company?.currency)
             ];
 
             // Combine all

@@ -13,6 +13,7 @@ import Categories from "@/pages/Categories";
 import Journal from "@/pages/Journal";
 import Ledger from "@/pages/Ledger";
 import TrialBalance from "@/pages/TrialBalance";
+import BalanceSheet from "@/pages/BalanceSheet";
 import AuditLogs from "@/pages/AuditLogs";
 import "./App.css";
 
@@ -52,6 +53,7 @@ export default function App() {
           <Route path="/journal" element={<Journal />} />
           <Route path="/ledger" element={<Ledger />} />
           <Route path="/trial-balance" element={<TrialBalance />} />
+          <Route path="/balance-sheet" element={<BalanceSheet />} />
           <Route path="/audit-logs" element={<AuditLogs />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

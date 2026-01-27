@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatCurrencyForExport } from "@/lib/utils";
 import { useAuthStore, type TrialBalanceResponse } from "@/store/useAuthStore";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
@@ -86,8 +86,8 @@ export default function TrialBalancePage() {
                 const row = [
                     acc.name,
                     acc.accountType,
-                    acc.debitBalance > 0 ? formatCurrency(acc.debitBalance, user?.company?.currency) : "-",
-                    acc.creditBalance > 0 ? formatCurrency(acc.creditBalance, user?.company?.currency) : "-"
+                    acc.debitBalance > 0 ? formatCurrencyForExport(acc.debitBalance, user?.company?.currency) : "-",
+                    acc.creditBalance > 0 ? formatCurrencyForExport(acc.creditBalance, user?.company?.currency) : "-"
                 ];
                 tableRows.push(row);
             });
@@ -96,8 +96,8 @@ export default function TrialBalancePage() {
             tableRows.push([
                 "TOTALS",
                 "",
-                formatCurrency(tbData.totals.debitBalance, user?.company?.currency),
-                formatCurrency(tbData.totals.creditBalance, user?.company?.currency)
+                formatCurrencyForExport(tbData.totals.debitBalance, user?.company?.currency),
+                formatCurrencyForExport(tbData.totals.creditBalance, user?.company?.currency)
             ]);
 
             autoTable(doc, {
@@ -138,16 +138,16 @@ export default function TrialBalancePage() {
             const dataRows = tbData.accounts.map(acc => [
                 acc.name,
                 acc.accountType,
-                acc.debitBalance,
-                acc.creditBalance
+                acc.debitBalance ? formatCurrencyForExport(acc.debitBalance, user?.company?.currency) : "-",
+                acc.creditBalance ? formatCurrencyForExport(acc.creditBalance, user?.company?.currency) : "-"
             ]);
 
             // Prepare total row
             const totalRow = [
                 'TOTALS',
                 '',
-                tbData.totals.debitBalance,
-                tbData.totals.creditBalance
+                formatCurrencyForExport(tbData.totals.debitBalance, user?.company?.currency),
+                formatCurrencyForExport(tbData.totals.creditBalance, user?.company?.currency)
             ];
 
             // Combine all

@@ -11,7 +11,7 @@ export function formatCurrency(amount: number | null | undefined, currency: stri
     const code = (currency || 'USD').toUpperCase();
     const { compact } = options || {};
 
-    // Special handling for BDT to ensure correct symbol is displayed
+    // Special handling for BDT to ensure correct symbol is displayed in UI
     if (code === 'BDT') {
         return '৳' + new Intl.NumberFormat('en-US', {
             minimumFractionDigits: compact ? 0 : 2,
@@ -38,5 +38,25 @@ export function formatCurrency(amount: number | null | undefined, currency: stri
             maximumFractionDigits: compact ? 1 : 2,
             notation: compact ? "compact" : undefined,
         }).format(amount);
+    }
+}
+
+/**
+ * Formats currency for export (PDF/Excel) using ISO codes instead of symbols
+ * to avoid encoding/font issues (e.g. BDT symbol missing in standard PDF fonts).
+ */
+export function formatCurrencyForExport(amount: number | null | undefined, currency: string = 'USD'): string {
+    if (amount === null || amount === undefined) return "-";
+    const code = (currency || 'USD').toUpperCase();
+
+    try {
+        // Use currencyDisplay: 'code' to get "USD 100.00" instead of "$100.00"
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: code,
+            currencyDisplay: 'code'
+        }).format(amount);
+    } catch (e) {
+        return `${code} ${amount.toFixed(2)}`;
     }
 }

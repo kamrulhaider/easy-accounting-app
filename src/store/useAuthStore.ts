@@ -131,6 +131,35 @@ export interface TrialBalanceResponse {
     };
 }
 
+export interface BalanceSheetAccount {
+    id: string;
+    name: string;
+    balance: number;
+}
+
+export interface BalanceSheetSection {
+    total: number;
+    accounts: BalanceSheetAccount[];
+}
+
+export interface BalanceSheetResponse {
+    assets: BalanceSheetSection;
+    liabilities: BalanceSheetSection;
+    equity: BalanceSheetSection;
+    totals: {
+        assets: number;
+        liabilities: number;
+        equity: number;
+        equationBalanced: boolean;
+    };
+    filters: {
+        companyId: string;
+        startDate?: string;
+        endDate?: string;
+        status?: string;
+    };
+}
+
 export interface User {
     id: string;
     username: string;
@@ -276,6 +305,7 @@ interface AuthState {
     deleteJournalEntry: (id: string) => Promise<void>;
     getLedger: (params: { accountId: string; startDate?: string; endDate?: string; limit?: number; offset?: number; all?: boolean }) => Promise<LedgerResponse>;
     getTrialBalance: (params: { startDate?: string; endDate?: string; status?: string }) => Promise<TrialBalanceResponse>;
+    getBalanceSheet: (params: { startDate?: string; endDate?: string; status?: string }) => Promise<BalanceSheetResponse>;
 
     // Audit Logs
     auditLogs: AuditLog[];
@@ -1073,8 +1103,32 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         return data as TrialBalanceResponse;
     },
 
+    getBalanceSheet: async (params) => {
+        const { token, user } = get();
+        if (!token || !user?.company?.id) throw new Error("No company context");
+
+        const query = new URLSearchParams({
+            ...params,
+            companyId: user.company.id
+        }).toString();
+
+        const response = await fetch(`${API_BASE_URL}/balance-sheet?${query}`, {
+            headers: {
+                "Authorization": `Bearer ${token}`,
+            },
+        });
+
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.error || "Failed to fetch balance sheet");
+        }
+
+        return result;
+    },
+
+    // Audit Logs
     fetchAuditLogs: async (params = {}) => {
-        const { token } = get();
+        const { token, user } = get();
         if (!token) return;
 
         const query = new URLSearchParams(params).toString();
@@ -1133,8 +1187,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         if (!response.ok) throw new Error(data.error || "Failed to fetch journal entries data");
         return data as JournalEntryCountData;
     },
-
-
 
     initialize: async () => {
         const storedToken = localStorage.getItem("authToken");
